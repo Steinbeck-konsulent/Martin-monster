@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="da">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#173f35">
+  <meta name="description" content="Et lille monster lytter til barnets fantasi og hjælper med at gøre den til et billede. Prototype.">
+  <title>Fortæl mig om dit monster · Prototype</title>
+  <style>
+    :root { color-scheme: light; --forest:#173f35; --forest2:#255e4b; --orange:#da7a38; --cream:#fcf8ed; --paper:#fffdf7; --ink:#18382f; --muted:#4e6258; --line:#d9dfd2; --shadow:0 16px 50px rgba(14,53,37,.10); }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:ui-rounded,system-ui,-apple-system,"Segoe UI",Arial,sans-serif; background:linear-gradient(145deg,#eaf2e7 0%,#faf4e7 100%); color:var(--ink); min-height:100vh; }
+    .page { max-width:1160px; margin:auto; padding:28px 22px 40px; }
+    .masthead { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:23px; }
+    .brand { display:flex; gap:11px; align-items:center; font-size:15px; font-weight:800; letter-spacing:.03em; }
+    .brand-bubble { display:grid; place-items:center; width:36px; height:36px; border-radius:12px; background:var(--forest); font-size:23px; }
+    .tag { padding:8px 12px; border:1px solid #cbd7ca; background:#eef4e9; border-radius:99px; font-size:12px; font-weight:700; color:#365346; }
+    .shell { display:grid; grid-template-columns:minmax(270px,.84fr) minmax(320px,1.16fr); border-radius:32px; overflow:hidden; background:var(--paper); box-shadow:var(--shadow); min-height:650px; border:1px solid #e5e6db; }
+    .character { background:var(--forest); color:white; padding:25px; display:flex; flex-direction:column; justify-content:space-between; gap:20px; position:relative; isolation:isolate; }
+    .character:before { position:absolute; content:""; width:480px;height:480px; border-radius:50%; background:rgba(233,192,94,.10); left:-150px; top:-150px; z-index:-1; }
+    .character .tiny { color:#d7eaca; font-size:13px; font-weight:700; letter-spacing:.06em; }
+    .character h1 { font-size:clamp(30px,3.4vw,44px); line-height:1.12; letter-spacing:-.035em; margin:10px 0; }
+    .character p { color:#e4eddd; font-size:15px; line-height:1.6; max-width:320px; }
+    .portrait-box { width:100%; aspect-ratio:1/1.04; border-radius:24px; overflow:hidden; border:5px solid rgba(255,255,255,.15); box-shadow:0 22px 50px rgba(0,0,0,.24); background:#263f2b; }
+    .portrait-box img { width:100%; height:100%; object-fit:cover; display:block; }
+    .character-foot { font-size:12px; color:#b9d1c4; }
+    .content { padding:clamp(24px,3.5vw,50px); }
+    .steps { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:33px; }
+    .step { border:1px solid var(--line); border-radius:50px; padding:7px 11px; font-size:12px; color:#6a756a; background:#fff; }
+    .step.current { color:var(--forest); border-color:#a7c7ad; background:#e6f3e6; font-weight:800; }
+    .eyebrow { text-transform:uppercase; font-size:12px; color:#537564; letter-spacing:.12em; font-weight:800; }
+    h2 { margin:9px 0 14px; font-size:clamp(27px,3vw,37px); line-height:1.18; letter-spacing:-.035em; }
+    .lead { font-size:16px; line-height:1.68; color:var(--muted); max-width:610px; }
+    .btn { display:inline-flex; gap:9px; align-items:center; justify-content:center; appearance:none; border:2px solid transparent; border-radius:15px; padding:13px 18px; min-height:49px; font-size:15px; font-weight:800; font-family:inherit; text-decoration:none; cursor:pointer; transition:transform .12s ease,background .15s ease; }
+    .btn:hover { transform:translateY(-1px); }
+    .btn:focus-visible,textarea:focus-visible { outline:3px solid #ecab65; outline-offset:3px; }
+    .primary { background:var(--forest); color:#fff; }
+    .primary:hover { background:var(--forest2); }
+    .secondary { background:#fff; border-color:#bfcec0; color:var(--forest); }
+    .accent { background:#db7b3b; color:white; }
+    .warn { background:#ffeedf; color:#7b4120; border-color:#eec5a4; }
+    .actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:25px; }
+    .note { background:#f2f5ed; border:1px solid #dbe6d9; border-radius:17px; padding:15px 16px; line-height:1.6; font-size:13px; color:#445e4a; margin-top:19px; }
+    .status { min-height:25px; font-size:14px; font-weight:700; margin-top:12px; color:#39644d; }
+    textarea { resize:vertical; background:#fff; width:100%; min-height:155px; border:2px solid #ccdbcb; border-radius:16px; padding:16px; font-family:inherit; font-size:17px; line-height:1.5; color:var(--ink); }
+    label.fieldlabel { font-size:14px; display:block; margin:22px 0 9px; font-weight:800; }
+    .voice-status { display:flex; gap:10px; align-items:center; background:#f8f3e8; border:1px solid #f0dfc8; padding:14px; border-radius:14px; margin-top:16px; color:#624c2f; font-size:14px; }
+    .voice-light { width:10px; height:10px; flex:none; border-radius:50%; background:#93a092; }
+    .voice-light.live { background:#e5664d; box-shadow:0 0 0 6px rgba(229,102,77,.14); animation:pulse 1s infinite alternate; }
+    @keyframes pulse {to { box-shadow:0 0 0 2px rgba(229,102,77,.08); }}
+    .stage[hidden], [hidden] { display:none !important; }
+    .figure { width:100%; aspect-ratio:1/1; max-width:425px; background:#e9efe3; border:1px solid #d5e1d5; border-radius:23px; overflow:hidden; margin:18px auto 10px; }
+    .figure img { width:100%; height:100%; display:block; object-fit:cover; }
+    .helper { font-size:13px; color:var(--muted); line-height:1.55; }
+    .revision { background:#f2f6ef; border:1px solid #d8e6d4; border-radius:18px; padding:16px; margin-top:18px; }
+    .revision textarea { min-height:90px; }
+    .footer { text-align:center; color:#597064; font-size:12px; margin:19px 0 0; line-height:1.5; }
+    @media(max-width:780px) { .page {padding:13px 12px 24px;} .shell {grid-template-columns:1fr;border-radius:24px;} .character {padding:20px;display:grid;grid-template-columns:1fr 110px;gap:12px;min-height:unset;} .character h1 {font-size:27px;} .character p {font-size:13px;} .portrait-box {width:110px;height:125px;aspect-ratio:auto;grid-row:1/3;grid-column:2;} .character-foot {grid-column:1/3;} .content {padding:26px 22px;} .steps {margin-bottom:21px;} }
+    @media(max-width:430px) { .tag {font-size:10px;} .btn {width:100%;} .actions {flex-direction:column;} .character {grid-template-columns:1fr 85px;} .portrait-box {width:85px;height:110px;} }
+    @media(prefers-reduced-motion:reduce) {*,*:before,*:after {animation:none!important;transition:none!important;} }
+  
+    .brand-logo {width:90px;height:auto;}
+    .portrait-box {position:relative;}
+    .portrait-box img.ai-mark {position:absolute;right:2%;bottom:2%;width:12%;height:auto;}
+    #testSample {object-fit:contain;background:#e9efe3;}
+    .figure:has(#resultImg[data-wide="true"]) {aspect-ratio:auto;}
+    .figure img[data-wide="true"] {height:auto;object-fit:contain;}
+    #testSample[hidden] {display:none;}
+    .btn:disabled {opacity:.65;cursor:wait;}
+    #demoCode {padding:9px;border:1px solid #bfcec0;border-radius:8px;font:inherit;}
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="masthead">
+      <div class="brand"><img class="brand-logo" src="./logo.png" alt="Steinbeck"><span>MONSTERVÆRKSTEDET</span></div>
+      <span class="tag">TESTVERSION · 1.2</span>
+    </header>
+    <main class="shell">
+      <aside class="character">
+        <div>
+          <div class="tiny">EN LILLE VEN I SKOVEN</div>
+          <h1>Fortæl mig om dit monster</h1>
+          <p>Jeg lytter til dine idéer. Sammen kan vi gøre dit fantasimonster synligt!</p>
+        </div>
+        <div class="portrait-box"><img src="./martin.webp" alt="Det lille pelsede monster står inde i en glasflaske i en magisk skov."><img class="ai-mark" src="./steinbeck-ai-maerke.png" alt="Genereret med AI"></div>
+        <div class="character-foot">Et eksperiment i leg, fantasi og teknologi.</div>
+      </aside>
+      <div class="content">
+        <nav class="steps" aria-label="Forløbets trin">
+          <span class="step current" data-step="1">1 · Mød monsteret</span>
+          <span class="step" data-step="2">2 · Fortæl</span>
+          <span class="step" data-step="3">3 · Se billedet</span>
+        </nav>
+
+        <section id="welcome" class="stage">
+          <span class="eyebrow">Velkommen</span>
+          <h2>Hej, lille monster-ven! 👋</h2>
+          <p class="lead">Kan du forestille dig dit helt eget monster? Det må se ud præcis, som du vil. Jeg glæder mig til at høre om det.</p>
+          <div class="actions">
+            <button class="btn secondary" type="button" id="speakHi">🔊 Hør monsteret sige hej</button>
+            <button class="btn primary" type="button" id="begin">Lad os begynde ✨</button>
+          </div>
+          <div class="note">Den voksne hjælper med at trykke på knapperne. Barnet bestemmer selv, hvad monsteret skal være.</div>
+        </section>
+
+        <section id="describe" class="stage" hidden>
+          <span class="eyebrow">Barnets fortælling</span>
+          <h2>Hvordan ser dit monster ud?</h2>
+          <p class="lead">Fortæl om farver, øjne, ben, vinger eller hvad du ellers finder på. Der er ingen forkerte monstre.</p>
+          <div class="voice-status" aria-live="polite"><span class="voice-light" id="voiceLight"></span><span id="voiceState">Klar til at lytte.</span></div>
+          <div class="actions">
+            <button class="btn primary" type="button" id="startListen">🎤 Lyt til barnet</button>
+            <button class="btn warn" type="button" id="stopListen" hidden>■ Stop – barnet er færdigt</button>
+          </div>
+          <label for="description" class="fieldlabel">Dette har monsteret hørt (den voksne må rette):</label>
+          <textarea id="description" placeholder="Barnets egne ord vises her. Den voksne kan også skrive beskrivelsen direkte."></textarea>
+          <div class="actions">
+            <button class="btn secondary" type="button" id="fillExample">Prøv med et eksempel</button>
+            <button class="btn accent" type="button" id="approve">Godkend og lav billedet ✨</button>
+          </div>
+          <div id="access" hidden><label class="fieldlabel" for="demoCode">Prøvekode</label><input id="demoCode" type="password" autocomplete="off"></div>
+          <p id="demoNote" class="helper">Prøv knappen med en testtegning. AI-billedgeneratoren skal kobles til for at lave nye AI-billeder.</p>
+          <p class="helper">Bruger du mikrofonen, kan browserens talegenkendelse sende lyd til en ekstern tjeneste. Brug derfor kun testfortællinger – ikke rigtige børns stemmer – før databeskyttelsen er afklaret.</p>
+        </section>
+
+        <section id="picture" class="stage" hidden>
+          <span class="eyebrow">Her er dit fantasimonster</span>
+          <h2>Se, hvad der kom frem! ✨</h2>
+          <p class="lead">Ligner det monsteret i din fantasi? Hvis ikke, kan du fortælle, hvad der skal ændres.</p>
+          <div class="figure"><img id="resultImg" alt="En testillustration af monsteret ud fra beskrivelsen."></div>
+          <div class="note" id="resultNote"><strong>Kun testillustration:</strong> Denne version tegner et enkelt monster med kode. En rigtig AI-billedgenerator er endnu ikke tilsluttet.</div>
+          <div class="actions">
+            <button class="btn primary" type="button" id="savePic">↓ Gem billedet som PNG</button>
+            <button class="btn secondary" type="button" id="revise">✏️ Ændr monsteret</button>
+          </div>
+          <div id="revision" class="revision" hidden>
+            <label for="changes" class="fieldlabel" style="margin-top:0">Hvad skal være anderledes?</label>
+            <textarea id="changes" placeholder="Fx: Den skal være lilla og have tre øjne."></textarea>
+            <div class="voice-status" aria-live="polite"><span class="voice-light" id="revisionLight"></span><span id="revisionState">Du kan også fortælle ændringen med mikrofonen.</span></div>
+            <div class="actions">
+              <button class="btn secondary" type="button" id="startChange">🎤 Sig ændringen</button>
+              <button class="btn warn" type="button" id="stopChange" hidden>■ Stop</button>
+              <button class="btn accent" type="button" id="applyChange">Lav en ny version ✨</button>
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn secondary" type="button" id="editDescription">Tilbage til barnets ord</button>
+            <button class="btn secondary" type="button" id="exampleArt">Se et AI-eksempel</button>
+            <button class="btn secondary" type="button" id="restart">Begynd med et nyt monster</button>
+          </div>
+        </section>
+        <p id="appMessage" role="status" aria-live="polite" class="status"></p>
+      </div>
+    </main>
+    <p class="footer">Prototype til afprøvning. Ingen konto, ingen lagring i appen. Når AI er tilsluttet, sendes den godkendte tekst til billedtjenesten.</p>
+  </div>
+
+  <script type="module">
+  import { imageEndpoint } from './config.js';
+  (() => {
+    'use strict';
+    const $ = id => document.getElementById(id);
+    const stages = ['welcome','describe','picture'];
+    let recognition = null, listening = false, listenTarget = null, listenStart = '', activeObjectUrl = null;
+    let revisionTexts = [];
+    const greeting = 'Hej! Jeg er dit lille monsterven. Kan du fortælle mig om dit fantasimonster? Hvilken farve har det? Og hvordan ser det ud? Jeg lytter, mens du fortæller. Når du er færdig, hjælper en voksen med at lave billedet.';
+    const SpeechRecognitionImpl = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    function msg(s) { $('appMessage').textContent = s || ''; }
+    function showStage(name) {
+      stopListening();
+      stages.forEach(id => { $(id).hidden = id !== name; });
+      const step = name === 'welcome' ? 1 : name === 'describe' ? 2 : 3;
+      document.querySelectorAll('.step').forEach(s => s.classList.toggle('current', Number(s.dataset.step) === step));
+      msg('');
+      window.scrollTo({ top:0, behavior:'smooth' });
+    }
+    function speak(text) {
+      if (!('speechSynthesis' in window)) { msg('Denne browser har ingen oplæsningsfunktion.'); return; }
+      speechSynthesis.cancel();
+      const say = new SpeechSynthesisUtterance(text);
+      say.lang = 'da-DK'; say.rate = .88; say.pitch = 1.18;
+      const voices = speechSynthesis.getVoices();
+      const danish = voices.find(v => /^da[-_]/i.test(v.lang));
+      if (danish) say.voice = danish;
+      say.onerror = () => msg('Kunne ikke afspille stemmen. Prøv igen, eller fortsæt uden lyd.');
+      speechSynthesis.speak(say);
+    }
+    function setListeningUI(isLive, target) {
+      const revision = target === $('changes');
+      $('startListen').hidden = isLive && !revision;
+      $('stopListen').hidden = !isLive || revision;
+      $('startChange').hidden = isLive && revision;
+      $('stopChange').hidden = !isLive || !revision;
+      $('voiceLight').classList.toggle('live',isLive&&!revision);
+      $('revisionLight').classList.toggle('live',isLive&&revision);
+      if (!revision) $('voiceState').textContent = isLive ? 'Monsteret lytter…' : 'Klar til at lytte.';
+      else $('revisionState').textContent = isLive ? 'Monsteret lytter til ændringen…' : 'Du kan også fortælle ændringen med mikrofonen.';
+    }
+    function startListening(target) {
+      if (!SpeechRecognitionImpl) { msg('Din browser understøtter ikke denne talegenkendelse. Skriv beskrivelsen i feltet, eller prøv Chrome/Edge på en sikker webadresse.'); return; }
+      if (listening) return;
+      if ('speechSynthesis' in window) speechSynthesis.cancel();
+      listenTarget = target;
+      listenStart = target.value.trim();
+      try {
+        recognition = new SpeechRecognitionImpl();
+        recognition.lang = 'da-DK';
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.onstart = () => { listening = true; setListeningUI(true,target); msg(''); };
+        recognition.onresult = event => {
+          let final = '', interim = '';
+          for (let i = 0; i < event.results.length; i++) {
+            const phrase = event.results[i][0].transcript.trim();
+            if (event.results[i].isFinal) final += phrase + ' ';
+            else interim += phrase + ' ';
+          }
+          target.value = [listenStart,final.trim(),interim.trim()].filter(Boolean).join(' ').trim();
+        };
+        recognition.onerror = event => {
+          const detail = event.error === 'not-allowed' ? 'Mikrofonadgangen blev afvist. Giv browseren adgang til mikrofonen, eller skriv i feltet.' : 'Talegenkendelsen stoppede (' + event.error + '). Du kan fortsætte med at skrive.';
+          msg(detail);
+        };
+        recognition.onend = () => { listening = false; setListeningUI(false,target); recognition = null; };
+        recognition.start();
+      } catch(e) { listening = false; setListeningUI(false,target); msg('Kunne ikke starte mikrofonen. Du kan skrive teksten direkte.'); }
+    }
+    function stopListening() {
+      if (recognition) {
+        try { recognition.stop(); } catch (_) {}
+      }
+      if (listenTarget) setListeningUI(false,listenTarget);
+      listening = false;
+    }
+
+    // En bevidst enkel DEMO-tegner. Ikke AI og ikke en erstatning for den færdige billedmodel.
+    function numFromWords(text,noun, fallback) {
+      const forms = {'en':1,'et':1,'ét':1,'to':2,'tre':3,'fire':4,'fem':5,'seks':6,'syv':7,'otte':8};
+      const rx = new RegExp('(?:\\b(\\d+|en|et|ét|to|tre|fire|fem|seks|syv|otte)\\b)\\s+(?:store\\s+|små\\s+|lange\\s+)?'+noun,'gi');
+      const matches = [...text.matchAll(rx)];
+      if (!matches.length) return fallback;
+      const last = matches[matches.length - 1][1].toLowerCase();
+      return Math.max(0,Math.min(8,forms[last] ?? Number(last)));
+    }
+    function svgMonster(description) {
+      const t = description.toLowerCase();
+      const colors = [
+        ['lyserød(?:e|t)?','#ef91b5'],['pink','#ef91b5'],['lilla','#9574d6'],['violet','#9574d6'],
+        ['grøn(?:ne|t)?','#7eb56f'],['blå(?:t)?','#6eace7'],['rød(?:e|t)?','#d97576'],
+        ['orange','#e9a658'],['gul(?:e|t)?','#f5cc6c'],['turkis','#6ec4b6'],
+        ['sort(?:e)?','#576172'],['hvid(?:e|t)?','#f4edd9'],['brun(?:e|t)?','#b58a65'],['grå(?:t)?','#a9acba']
+      ];
+      let color = '#91b97a', lastPos = -1;
+      for (const [pattern,c] of colors) for(const m of t.matchAll(new RegExp(pattern,'g'))) {
+        if(m.index > lastPos) { lastPos=m.index; color=c; }
+      }
+      const eyes = Math.max(1, Math.min(6,numFromWords(t,'(?:øjne|øje)',/ét øje|et øje|enøjet/.test(t)?1:2)));
+      const legs = Math.max(0, Math.min(8,numFromWords(t,'ben',/\b(?:ingen|uden) ben\b/.test(t)?0:4)));
+      const horns = /horn/.test(t) ? Math.max(1, Math.min(4,numFromWords(t,'horn',2))) : 0;
+      const wings = /vinge|vinger|flyve/.test(t);
+      const tail = /hale/.test(t);
+      const teeth = /tænd|tænder|tand/.test(t);
+      const isSpace = /rum|planet|stjerne|måne/.test(t);
+      const isWater = /vand|hav|ocean|søen/.test(t);
+      const seed = [...t].reduce((a,c)=>(a*31+c.charCodeAt(0))>>>0,11);
+      const yBody = 590;
+      let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 700" width="700" height="700" role="img"><defs>
+        <linearGradient id="sky" x2=".8" y2="1"><stop stop-color="${isSpace?'#363a69':isWater?'#a4d8dd':'#d9e8d2'}"/><stop offset="1" stop-color="${isSpace?'#77729e':isWater?'#e7faf0':'#fff0cc'}"/></linearGradient>
+        <radialGradient id="fur"><stop stop-color="${color}"/><stop offset="1" stop-color="${shade(color,-16)}"/></radialGradient>
+        <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="18"/></filter></defs>
+        <rect width="700" height="700" fill="url(#sky)"/>
+        <ellipse cx="350" cy="629" rx="218" ry="40" fill="#395d4b" opacity=".17" filter="url(#shadow)"/>`;
+      for(let i=0;i<18;i++) {const x=(seed+i*127)%660+20,y=(seed*3+i*79)%440+25,r=2+(i%4);svg+=`<circle cx="${x}" cy="${y}" r="${r}" fill="${isSpace?'#fff8ec':'#fff8d5'}" opacity=".7"/>`;}
+      svg += `<path d="M0 628 Q135 585 268 623 T700 618 V700 H0Z" fill="${isWater?'#6da6a0':isSpace?'#474a78':'#89b189'}" opacity=".65"/>`;
+      if(tail) svg+=`<path d="M470 539 Q625 470 592 358" stroke="${shade(color,-25)}" stroke-width="33" stroke-linecap="round" fill="none"/>`;
+      if(wings) svg+=`<path d="M272 418 C120 236 108 530 250 515Z" fill="#f0cdb5" stroke="#9c9b90" stroke-width="6"/><path d="M433 418 C585 236 595 530 452 515Z" fill="#f0cdb5" stroke="#9c9b90" stroke-width="6"/>`;
+      for(let i=0;i<legs;i++) {const x=350+(i-(legs-1)/2)*Math.min(62,200/Math.max(1,legs-1));svg+=`<rect x="${x-20}" y="${yBody-25+(i%2)*4}" width="44" height="101" rx="22" fill="${shade(color,-25)}"/><ellipse cx="${x+3}" cy="661" rx="30" ry="18" fill="${shade(color,-12)}"/>`;}
+      for(let i=0;i<horns;i++) {const x=290+(i-(horns-1)/2)*92;svg+=`<path d="M${x-27} 359 Q${x-49} 235 ${x+4} 220 Q${x+2} 302 ${x+31} 360Z" fill="#f8e4bb" stroke="#9f907d" stroke-width="5"/>`;}
+      svg+=`<path d="M205 530 Q165 443 223 351 Q274 274 352 296 Q463 270 499 392 Q539 517 483 587 Q424 637 344 632 Q236 628 205 530Z" fill="url(#fur)" stroke="${shade(color,-28)}" stroke-width="7"/>`;
+      svg+=`<ellipse cx="226" cy="431" rx="28" ry="48" transform="rotate(-32 226 431)" fill="#e3b6a2" stroke="${shade(color,-20)}" stroke-width="8"/><ellipse cx="474" cy="431" rx="28" ry="48" transform="rotate(32 474 431)" fill="#e3b6a2" stroke="${shade(color,-20)}" stroke-width="8"/>`;
+      const gap= eyes===1 ? 0 : Math.min(76,255/(eyes-1));
+      for(let i=0;i<eyes;i++){const x=350+(i-(eyes-1)/2)*gap,y=420 + (eyes>3 && i%2===0 ? -22:0),r=eyes>4?22:eyes>2?28:39;
+        svg+=`<circle cx="${x}" cy="${y}" r="${r+7}" fill="${shade(color,-18)}"/><circle cx="${x}" cy="${y}" r="${r}" fill="#fff9f0"/><circle cx="${x+5}" cy="${y+3}" r="${r*.58}" fill="#2e3532"/><circle cx="${x-3}" cy="${y-7}" r="${r*.2}" fill="white"/>`;}
+      svg+=`<path d="M306 529 Q352 572 398 529" stroke="#6f4b4b" stroke-width="11" stroke-linecap="round" fill="none"/>`;
+      if(teeth)svg+=`<path d="M321 540 l12 23 l13 -20 M359 542 l12 23 l13 -22" fill="#fff6e5" stroke="#fff6e5" stroke-width="2"/>`;
+      svg+=`<circle cx="290" cy="504" r="13" fill="#e89a96" opacity=".6"/><circle cx="409" cy="504" r="13" fill="#e89a96" opacity=".6"/>`;
+      svg+=`<path d="M224 510 Q160 478 156 530" stroke="${shade(color,-24)}" stroke-width="32" stroke-linecap="round" fill="none"/><path d="M481 510 Q543 481 551 536" stroke="${shade(color,-24)}" stroke-width="32" stroke-linecap="round" fill="none"/>`;
+      for(let i=0;i<12;i++){const x=245+(seed+i*41)%220,y=340+(seed+i*31)%270;svg+=`<circle cx="${x}" cy="${y}" r="${2+i%4}" fill="${shade(color,-23)}" opacity=".22"/>`;}
+      svg+='</svg>';
+      return svg;
+    }
+    function shade(hex,percent){let n=parseInt(hex.slice(1),16),a=Math.round(2.55*percent),r=Math.max(0,Math.min(255,(n>>16)+a)),g=Math.max(0,Math.min(255,(n>>8&255)+a)),b=Math.max(0,Math.min(255,(n&255)+a));return '#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('');}
+    const resultNote = $('resultNote');
+    const demoNote = resultNote.textContent;
+    let busy = false;
+    $('access').hidden = !imageEndpoint;
+    $('demoNote').hidden = Boolean(imageEndpoint);
+
+    function displayImage(blob, kind) {
+      if (activeObjectUrl) URL.revokeObjectURL(activeObjectUrl);
+      activeObjectUrl = URL.createObjectURL(blob);
+      const image = $('resultImg');
+      image.dataset.wide = String(kind !== 'drawing');
+      image.alt = kind === 'example' ? 'Et klodsmonster i et indendørs legeland' : 'Dit fantasimonster';
+      image.src = activeObjectUrl;
+      resultNote.hidden = kind === 'ai';
+      resultNote.textContent = kind === 'example' ? 'AI-eksempel fra jeres tidligere afprøvning.' : demoNote;
+      showStage('picture');
+      $('revision').hidden = true;
+      $('changes').value = '';
+    }
+
+    async function generate(change = '') {
+      if (busy) return;
+      if (listening) { msg('Stop mikrofonen, og tjek, at de sidste ord er kommet med.'); return; }
+      const description = $('description').value.trim();
+      if (!description) { msg('Fortæl eller skriv først lidt om monsteret.'); return; }
+      const code = $('demoCode').value.trim();
+      if (imageEndpoint && !code) {
+        showStage('describe');
+        msg('Skriv prøvekoden først.');
+        $('demoCode').focus();
+        return;
+      }
+      const changes = change ? [...revisionTexts, change] : [];
+      const text = [description, ...changes.map(value => 'Ændring: ' + value)].join('\n');
+      if (text.length > 2000) { msg('Brug højst 2000 tegn i alt.'); return; }
+      busy = true;
+      const buttons = ['approve', 'applyChange', 'editDescription', 'restart', 'exampleArt'].map($);
+      buttons.forEach(button => { button.disabled = true; });
+      try {
+        if (imageEndpoint) {
+          msg('Billedet bliver lavet …');
+          const response = await fetch(imageEndpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + code },
+            body: JSON.stringify({ description: text }),
+            signal: AbortSignal.timeout(240_000),
+          });
+          if (response.status === 401) { msg('Prøvekoden passer ikke. Tjek den under barnets ord.'); return; }
+          if (!response.ok || !response.headers.get('Content-Type')?.startsWith('image/')) {
+            msg('Billedtjenesten kunne ikke lave billedet. Prøv igen.'); return;
+          }
+          displayImage(await markedImage(await response.blob()), 'ai');
+        } else {
+          displayImage(new Blob([svgMonster(text)], { type: 'image/svg+xml' }), 'drawing');
+        }
+        revisionTexts = changes;
+      } catch {
+        msg('Forbindelsen eller billedet slog fejl. Fortællingen er stadig her.');
+      } finally {
+        busy = false;
+        buttons.forEach(button => { button.disabled = false; });
+      }
+    }
+
+    async function markedImage(blob) {
+      const picture = await createImageBitmap(blob);
+      try {
+        const badge = new Image();
+        badge.src = './steinbeck-ai-maerke.png';
+        await badge.decode();
+        const canvas = document.createElement('canvas');
+        canvas.width = picture.width;
+        canvas.height = picture.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(picture, 0, 0);
+        const width = Math.round(canvas.width * .11);
+        const height = Math.round(width * badge.naturalHeight / badge.naturalWidth);
+        const margin = Math.round(canvas.width * .02);
+        ctx.drawImage(badge, canvas.width - width - margin, canvas.height - height - margin, width, height);
+        const png = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+        if (!png) throw new Error('PNG kunne ikke oprettes');
+        return png;
+      } finally { picture.close(); }
+    }
+
+    async function downloadImage() {
+      if (!activeObjectUrl) return;
+      try {
+        const image = $('resultImg');
+        await image.decode();
+        const canvas = document.createElement('canvas');
+        canvas.width = image.naturalWidth;
+        canvas.height = image.naturalHeight;
+        canvas.getContext('2d').drawImage(image, 0, 0);
+        const png = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+        if (!png) throw new Error('PNG kunne ikke oprettes');
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(png);
+        link.href = url;
+        link.download = 'mit-fantasimonster.png';
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 2500);
+        msg('Billedet er klar til at blive gemt.');
+      } catch { msg('Kunne ikke gemme billedet.'); }
+    }
+
+    $('exampleArt').addEventListener('click', async () => {
+      if (busy) return;
+      busy = true;
+      try {
+        const response = await fetch('./eksempel.webp');
+        if (!response.ok) throw new Error('Eksempelbilledet mangler');
+        displayImage(await markedImage(await response.blob()), 'example');
+      } catch { msg('Eksempelbilledet kunne ikke åbnes.'); }
+      finally { busy = false; }
+    });
+    $('speakHi').addEventListener('click',()=>speak(greeting));
+    $('begin').addEventListener('click',()=>{if('speechSynthesis' in window)speechSynthesis.cancel();showStage('describe');});
+    $('startListen').addEventListener('click',()=>startListening($('description')));
+    $('stopListen').addEventListener('click',stopListening);
+    $('fillExample').addEventListener('click',()=>{$('description').value='Mit monster er grønt, har tre øjne, fire ben, to horn og store vinger. Det er sødt og bor i en magisk skov.';msg('Nu kan du teste billedet med eksempelbeskrivelsen.');});
+    $('approve').addEventListener('click',()=>generate());
+    $('savePic').addEventListener('click',downloadImage);
+    $('revise').addEventListener('click',()=>{$('revision').hidden=false; $('changes').focus();});
+    $('startChange').addEventListener('click',()=>startListening($('changes')));
+    $('stopChange').addEventListener('click',stopListening);
+    $('applyChange').addEventListener('click',()=>{const change=$('changes').value.trim();if(!change){msg('Fortæl eller skriv først, hvad der skal ændres.');return;}generate(change);});
+    $('editDescription').addEventListener('click',()=>showStage('describe'));
+    $('restart').addEventListener('click',()=>{stopListening(); $('description').value=''; $('changes').value='';revisionTexts=[];if(activeObjectUrl)URL.revokeObjectURL(activeObjectUrl);activeObjectUrl=null;showStage('welcome');});
+  })();
+  </script>
+</body>
+</html>
