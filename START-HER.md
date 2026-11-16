@@ -1,30 +1,36 @@
-# Martin · Monsterværkstedet
+# Martin Monster på GitHub Pages
 
-## Først · Åbn siden fra GitHub
+## Udgiv
 
-1. Pak filpakken ud. Åbn mappen `Martin-monster`.
-2. Træk **indholdet** af mappen ind i dit nye GitHub-repo, så `index.html` ligger i roden sammen med `style.css`, `app.js`, `config.js` og mapperne `assets` og `server`.
-3. Vælg **Commit changes**. Åbn **Settings → Pages**, vælg **Deploy from a branch**, og vælg `main` og `/ (root)`. Åbn linket, når GitHub viser det under Pages.
-4. Vælg **Prøv en opdigtet fortælling**, og derefter **Læs tilbage**. I kan rette ordene eller åbne det eksisterende eksempelbillede. Du kan også høre Martins velkomst med en dansk browserstemme og prøve mikrofonen i en browser, der understøtter talegenkendelse.
+Åbn repositoriet Steinbeck-konsulent/monster-billede. Vælg Add file → Upload files, og upload indholdet fra ZIP-mappen til roden af den gren, GitHub Pages udgiver fra. Upload mapperne som mapper. Behold den nuværende historik. Den nye index.html erstatter startsiden. Der er ingen API-nøgler i filerne. Appens adresse er https://steinbeck-konsulent.github.io/monster-billede/.
 
-GitHub Pages viser siden direkte i browseren. Testen kan bruges uden softwareinstallation. Eksempelbilledet er fra den tidligere afprøvning og er markeret som eksempel.
+## Brug direkte fra linket
 
-## Derefter · Slå nye billeder til
+Barnet fortæller om et monster fra LEGO, en tegning eller fantasien. Den voksne skriver eller godkender barnets ord, vælger »Brug min AI i en anden fane« og klikker »Godkend og lav billedet«. Kopiér prompten til den billed-AI, den voksne allerede bruger. Gem AI-billedet, og vælg det i Martin Monster. Appen lægger AI-mærket på billedet og kan gemme det som PNG. Her behøver deltageren kun en browser og sin egen billed-AI. Ved brug af mikrofonen kan browseren behandle lyden hos en ekstern tjeneste.
 
-Dette er engangsopsætning for den, der ejer prototypen. Der kan være udgifter ved billedgenerering. Pædagogen skal senere kun have linket og prøvekoden.
+## Automatisk med personens egen API-nøgle på Windows
 
-1. Opret en **Cloudflare Worker** i Cloudflare-dashboardet. Erstat standardkoden med indholdet af `server/worker.mjs` og deploy.
-2. Åbn Workerens **Settings → Variables and Secrets**. Tilføj `OPENAI_API_KEY` og `DEMO_CODE` som **Secrets**. Førstnævnte er en OpenAI API-nøgle med adgang til billedmodellen. Til sidstnævnte vælger du en lang, unik prøvekode. Del kun prøvekoden med dem, der skal teste.
-3. Tilføj `ALLOWED_ORIGIN` som tekstvariabel. For standardlinket til dette repo er værdien `https://steinbeck-konsulent.github.io`, uden skråstreg til sidst og uden reponavnet. Ved en anden GitHub Pages-adresse bruges dens domæne med https.
-4. Åbn `config.js` i GitHub og sæt Workerens fulde HTTPS-adresse mellem anførselstegnene. Commit ændringen, vent på Pages og genindlæs siden.
-5. Test med den opdigtede fortælling. Læs den tilbage, indtast prøvekoden, og vælg **Godkend og lav billede**. Billedet kan derefter gemmes som PNG med AI-mærket.
+Brug Chrome. Hver deltager, der ønsker automatisk billedgenerering, udpakker ZIP-filen og sætter sin egen nøgle op på sin egen bærbare. Et almindeligt AI-abonnement giver ikke automatisk API-adgang. Manuel brug fungerer også med andre AI-billedværktøjer.
 
-API-nøgle og prøvekode skal ligge i Workerens hemmelige indstillinger. Kun Workerens adresse skal ind i GitHub-koden.
+1. Åbn den udpakkede mappe i Stifinder, skriv powershell i adresselinjen, og tryk Enter. Sørg for, at Python 3.11 eller nyere er installeret.
+2. Kør:
 
-Appen sender den godkendte tekst til billedmodellen. Pakken indeholder ingen fotos fra institutionen. Brug opdigtede historier ved den første afprøvning. Hvis mikrofonen bruges, kan browserens talegenkendelse sende lyden til sin taleleverandør.
+       py -m venv .venv
+       .\.venv\Scripts\python.exe -m pip install -r lokal-forbindelse\requirements.txt
 
-## Links
+3. Indtast én eller begge API-nøgler skjult i samme PowerShell-vindue:
 
-- [GitHub Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/creating-a-github-pages-site)
-- [Cloudflare Workers i dashboardet](https://developers.cloudflare.com/workers/get-started/dashboard/)
-- [OpenAI API-nøgler](https://platform.openai.com/api-keys)
+       $env:GEMINI_API_KEY = [System.Net.NetworkCredential]::new("", (Read-Host "Gemini API-nøgle" -AsSecureString)).Password
+       $env:OPENAI_API_KEY = [System.Net.NetworkCredential]::new("", (Read-Host "OpenAI API-nøgle" -AsSecureString)).Password
+
+4. Start forbindelsen:
+
+       .\.venv\Scripts\python.exe lokal-forbindelse\server.py
+
+5. På GitHub Pages-siden, under barnets fortælling, åbn »Tilslut min AI automatisk«. Indsæt den midlertidige forbindelseskode, som står i PowerShell, og tryk »Forbind«. Tillad lokal netværksadgang, hvis Chrome spørger. Vælg Gemini eller OpenAI. Behold PowerShell åbent under brug. Stop den lokale forbindelse med Ctrl+C.
+
+Forbindelsen lytter kun på 127.0.0.1. API-nøglen bliver i den lokale proces. Siden modtager kun en midlertidig forbindelseskode og AI-billedet. Koden skifter ved genstart. AI’en får beskrivelsen og eventuelle godkendte rettelser. Der er ingen fælles server.
+
+## Mail
+
+Brugerfladen til »Send billedet på mail« er med. Automatisk afsendelse er sat på pause, indtil Steinbeck-afsenderen er valgt. API-forbindelsen indeholder den tidligere SMTP-funktion for API-genererede billeder. Pakken indeholder ingen afsenderoplysninger eller login. Manuel import kan bruges til at gemme en PNG med det samme.
